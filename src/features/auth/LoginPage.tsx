@@ -2,6 +2,7 @@ import { Mail, PlayCircle } from 'lucide-react';
 import { FormEvent, useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { api } from '../../lib/api';
+import { toJapaneseErrorMessage } from '../../lib/errorMessages';
 import { useAuth } from './AuthContext';
 
 export function LoginPage() {
@@ -30,7 +31,7 @@ export function LoginPage() {
       await signInWithEmail(email);
       setMessage(isDemo ? 'デモセッションを開始しました。' : 'ログイン用リンクをメールで送信しました。');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'ログイン処理に失敗しました。');
+      setError(toJapaneseErrorMessage(err, 'ログイン処理に失敗しました。'));
     } finally {
       setIsSubmitting(false);
     }
@@ -49,7 +50,7 @@ export function LoginPage() {
       setApplicationAffiliation('');
       setMessage(result.message);
     } catch (err) {
-      setError(err instanceof Error ? err.message : '利用申請に失敗しました。');
+      setError(toJapaneseErrorMessage(err, '利用申請に失敗しました。'));
     } finally {
       setIsApplying(false);
     }

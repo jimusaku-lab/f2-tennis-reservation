@@ -2,6 +2,7 @@ import type { Session } from '@supabase/supabase-js';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { api } from '../../lib/api';
 import { appEnv } from '../../lib/env';
+import { toJapaneseErrorMessage } from '../../lib/errorMessages';
 import { supabase } from '../../lib/supabase';
 import type { Member } from '../../lib/types';
 import { AuthContext } from './AuthContext';
@@ -41,7 +42,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         try {
           await refreshMember();
         } catch (err) {
-          setError(err instanceof Error ? err.message : 'メンバー確認に失敗しました。');
+          setError(toJapaneseErrorMessage(err, 'メンバー確認に失敗しました。'));
           setMember(null);
         }
       }
@@ -60,7 +61,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         await refreshMember();
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'メンバー確認に失敗しました。');
+        setError(toJapaneseErrorMessage(err, 'メンバー確認に失敗しました。'));
       }
     });
 
