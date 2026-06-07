@@ -1,9 +1,16 @@
 import { CalendarDays, ClipboardList, LogOut, Settings, UserRound } from 'lucide-react';
+import { useState } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
 import { useAuth } from '../features/auth/AuthContext';
 
 export function AppShell() {
   const { member, isDemo, signOut } = useAuth();
+  const [isLogoutConfirmOpen, setIsLogoutConfirmOpen] = useState(false);
+
+  async function handleSignOut() {
+    setIsLogoutConfirmOpen(false);
+    await signOut();
+  }
 
   return (
     <div className="app-shell">
@@ -17,9 +24,29 @@ export function AppShell() {
             <UserRound size={16} aria-hidden="true" />
             {member?.name}
           </span>
-          <button className="icon-button" type="button" onClick={signOut} aria-label="ログアウト" title="ログアウト">
-            <LogOut size={18} aria-hidden="true" />
-          </button>
+          <div className="logout-control">
+            <button
+              className="icon-button"
+              type="button"
+              onClick={() => setIsLogoutConfirmOpen((isOpen) => !isOpen)}
+              aria-expanded={isLogoutConfirmOpen}
+              aria-label="ログアウトメニュー"
+              title="ログアウトメニュー"
+            >
+              <LogOut size={18} aria-hidden="true" />
+            </button>
+            {isLogoutConfirmOpen && (
+              <div className="logout-popover" role="dialog" aria-label="ログアウト確認">
+                <p>通常はログアウト不要です。</p>
+                <button className="danger-button inline" type="button" onClick={handleSignOut}>
+                  ログアウトする
+                </button>
+                <button className="secondary-button inline" type="button" onClick={() => setIsLogoutConfirmOpen(false)}>
+                  キャンセル
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </header>
 

@@ -273,6 +273,31 @@ button:disabled {
   white-space: nowrap;
 }
 
+.logout-control {
+  position: relative;
+}
+
+.logout-popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: min(260px, calc(100vw - 24px));
+  border: 1px solid #dce5e1;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 18px 48px rgba(16, 34, 30, 0.18);
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+}
+
+.logout-popover p {
+  margin: 0;
+  color: #4c5f5b;
+  font-size: 0.86rem;
+  line-height: 1.5;
+}
+
 .content {
   width: min(100%, 980px);
   margin: 0 auto;
