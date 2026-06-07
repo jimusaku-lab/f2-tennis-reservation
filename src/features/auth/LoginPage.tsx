@@ -1,9 +1,12 @@
 import { Mail, PlayCircle } from 'lucide-react';
-import { FormEvent, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { api } from '../../lib/api';
 import { toJapaneseErrorMessage } from '../../lib/errorMessages';
 import { useAuth } from './AuthContext';
+
+const loginEmailCooldownMs = 60_000;
+const loginEmailCooldownKey = 'f2-login-email-cooldown-until';
 
 export function LoginPage() {
   const { member, isDemo, signInWithEmail, startDemo, error: authError } = useAuth();
@@ -15,20 +18,40 @@ export function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isApplying, setIsApplying] = useState(false);
+  const [now, setNow] = useState(() => Date.now());
+  const [cooldownUntil, setCooldownUntil] = useState(() => Number(localStorage.getItem(loginEmailCooldownKey) || 0));
   const location = useLocation();
   const from = (location.state as { from?: string } | null)?.from ?? '/events';
+  const cooldownRemainingSeconds = Math.max(0, Math.ceil((cooldownUntil - now) / 1000));
+  const isLoginCoolingDown = cooldownRemainingSeconds > 0;
+
+  useEffect(() => {
+    if (!isLoginCoolingDown) return undefined;
+    const intervalId = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(intervalId);
+  }, [isLoginCoolingDown]);
 
   if (member?.status === 'active') return <Navigate to={from} replace />;
   if (member) return <Navigate to="/pending" replace />;
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
+    setNow(Date.now());
+    if (Date.now() < cooldownUntil) {
+      setError('直前にログインメールを送信しています。少し時間を置いて再度お試しください。');
+      return;
+    }
+
     setIsSubmitting(true);
     setError(null);
     setMessage(null);
 
     try {
       await signInWithEmail(email);
+      const nextCooldownUntil = Date.now() + loginEmailCooldownMs;
+      localStorage.setItem(loginEmailCooldownKey, String(nextCooldownUntil));
+      setCooldownUntil(nextCooldownUntil);
+      setNow(Date.now());
       setMessage(isDemo ? 'デモセッションを開始しました。' : 'ログイン用リンクをメールで送信しました。');
     } catch (err) {
       setError(toJapaneseErrorMessage(err, 'ログイン処理に失敗しました。'));
@@ -79,8 +102,8 @@ export function LoginPage() {
               required
             />
           </div>
-          <button className="primary-button" type="submit" disabled={isSubmitting}>
-            {isSubmitting ? '送信中' : 'ログインリンクを送る'}
+          <button className="primary-button" type="submit" disabled={isSubmitting || isLoginCoolingDown}>
+            {isSubmitting ? '送信中' : isLoginCoolingDown ? `再送まで ${cooldownRemainingSeconds}秒` : 'ログインリンクを送る'}
           </button>
         </form>
 
